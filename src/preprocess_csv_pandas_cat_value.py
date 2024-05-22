@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 
 pd.options.display.max_seq_items = 3000000
-
+from sklearn.feature_extraction import FeatureHasher
 from nltk.corpus import stopwords
 import re
 from sklearn import preprocessing
 import nltk
 
-nrows = 1200
+nrows = 12000
 file_path = "../data/datas_reste_non_num_a_traiter2.csv"
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
                    nrows=nrows
@@ -70,6 +70,13 @@ nb_not_null.T.head(150)
 mask = pd.cut(nb_not_null['nb'], [-1, 0, 5, 10, 100, 300, 10000, 2000000])  #
 mask.value_counts(normalize=False, sort=False)
 
+data.drop(columns='countries', inplace=True)
+data.drop(columns='labels', inplace=True)
+data.drop(columns='traces', inplace=True)
+data.drop(columns='additives', inplace=True)
+data.drop(columns='categories', inplace=True)
+data.drop(columns='main_category', inplace=True)
+
 data.rename(columns={'nutriscore_score': 'nutriscore',
                      'nutriscore_grade': 'nutrigrade',
                      'traces_en': 'traces',
@@ -118,14 +125,12 @@ for c in li_col:
     t_ind = comp_df(data, c1, c2, True)
     data.loc[t_ind[1], [c1, c2]] = np.nan
 
-data.filter(like='packaging')
-
 data.drop(columns='packaging_text', inplace=True)
 
 for i, c in enumerate(data.columns):
     print('\n' + c if i % 6 == 0 else c, end=' | ')
 
-cols = ['brands', 'packaging', 'countries', 'labels', 'traces', 'additives',
+cols = ['brands', 'countries', 'labels', 'traces', 'additives',
         'allergens', 'main_category', 'categories', 'pnns2', 'pnns1']
 
 thresh = [0, 2, 5, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 5000]
@@ -133,15 +138,7 @@ thresh = [0, 2, 5, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 5000]
 for c in cols:
     data[c] = data[c].replace([r'[-]'], [' '], regex=True)
 
-for c in cols:
-    n_lists = data[c].str.contains(',').sum()
-    if data[c].str.contains(',').sum():
-        print(c.upper() + ': ' + str(n_lists) + ' lists')
-    else:
-        print(c + ': - no list - ')
 
-multi_cat_cols = ['brands', 'packaging', 'countries', 'labels',
-                  'traces', 'additives', 'allergens', 'categories']
 
 cat_cols = ['main_category', 'pnns1', 'pnns2']
 
@@ -162,7 +159,7 @@ n = 15
 print('Number of categories: ', [(cat + ' (' + str(data[cat].nunique()) + ') ') for cat in cols])
 
 tot = data.shape[0]
-ser = pd.DataFrame([[c, data[c].str.contains('unknown').sum() * 100 / tot] \
+ser = pd.DataFrame([[c, data[c].astype(str).str.contains('unknown').sum() * 100 / tot] \
                     for c in data.select_dtypes('object').columns],
                    columns=['col', 'pct_unknown']).set_index('col')
 ser.sort_values('pct_unknown').plot.barh()
@@ -385,7 +382,7 @@ pnns2 = ['dressing and sauce', 'pizza pie and quiche', 'one dish meal', 'salty a
 
 data.groupby('pnns1').get_group('fat and sauce')['pnns2'].unique()
 
-from sklearn.feature_extraction import FeatureHasher
+
 
 
 def hash_column(column, n_features=1000):

@@ -11,9 +11,9 @@ from sklearn.metrics import accuracy_score
 
 pd.options.display.max_seq_items = 3000000
 file_path = "/media/kirrog/data/data/infr_bd/en.openfoodfacts.org.products.csv"
-nrows = 1200
+nrows = 12000
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
-                   # nrows=nrows
+                   nrows=nrows
                    )
 
 datas = data
@@ -196,6 +196,8 @@ print(pnns_groups_2)
 pnns_groups_2 = split_words(df=datas, column='pnns_groups_2')
 print("{} categories are represented in the variable pnns_group_2.".format(len(pnns_groups_2)))
 
+datas.drop(columns="packaging", inplace=True)
+
 datas.info()
 datas['packaging_en'] = datas['packaging_en'].apply(lemmatize_and_remove_prefix)
 
@@ -340,7 +342,7 @@ print(datas_cleaned.shape)
 
 nutriscore_features = ['pnns_groups_1', 'pnns_groups_2', 'nutriscore_grade', 'nutriscore_score',
                        'energy_100g', 'sugars_100g', 'saturated-fat_100g', 'sodium_100g', 'fiber_100g', 'proteins_100g']
-datas_cleaned[nutriscore_features].sample(10)
+print(datas_cleaned[nutriscore_features].sample(10))
 
 datas_cleaned.pnns_groups_2.unique()
 
