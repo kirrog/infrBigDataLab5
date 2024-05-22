@@ -1,6 +1,7 @@
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
+from pyspark.ml.feature import VectorAssembler
 
 spark = SparkSession.builder.appName('customers').getOrCreate()
 
@@ -14,7 +15,7 @@ dataset = dataset.drop(*columns_to_drop)
 dataset.printSchema()
 
 
-from pyspark.ml.feature import VectorAssembler
+
 
 dataset = dataset.withColumn("Defaulted", dataset["Defaulted"])
 
