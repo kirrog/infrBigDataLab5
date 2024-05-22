@@ -11,19 +11,7 @@ nltk.download('punkt')
 df = pd.read_csv("../data/df_CatVal_cleanedV2.csv",
                  encoding="utf-8", low_memory=False, index_col=0)
 
-# df.dropna(inplace=True)
-# df.dropna(subset=['product_name'], inplace=True)
 
-print("Before")
-for column in df.columns:
-    if df[column].isna().any():
-        print(column)
-
-df = df.fillna(0)
-print("After")
-for column in df.columns:
-    if df[column].isna().any():
-        print(column)
 
 df_init = df
 

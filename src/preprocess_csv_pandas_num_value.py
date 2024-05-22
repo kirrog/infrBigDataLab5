@@ -11,7 +11,7 @@ from sklearn.metrics import accuracy_score
 
 pd.options.display.max_seq_items = 3000000
 file_path = "/media/kirrog/data/data/infr_bd/en.openfoodfacts.org.products.csv"
-nrows = 12000
+nrows = 120000
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
                    nrows=nrows
                    )

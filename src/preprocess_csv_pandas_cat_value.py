@@ -11,7 +11,7 @@ import nltk
 nrows = 12000
 file_path = "../data/datas_reste_non_num_a_traiter2.csv"
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
-                   nrows=nrows
+                   # nrows=nrows
                    )
 
 
@@ -137,8 +137,6 @@ thresh = [0, 2, 5, 10, 20, 30, 40, 50, 100, 250, 500, 1000, 5000]
 
 for c in cols:
     data[c] = data[c].replace([r'[-]'], [' '], regex=True)
-
-
 
 cat_cols = ['main_category', 'pnns1', 'pnns2']
 
@@ -383,8 +381,6 @@ pnns2 = ['dressing and sauce', 'pizza pie and quiche', 'one dish meal', 'salty a
 data.groupby('pnns1').get_group('fat and sauce')['pnns2'].unique()
 
 
-
-
 def hash_column(column, n_features=1000):
     iterable_column = [[str(val)] for val in column]
 
@@ -489,6 +485,8 @@ for i, c in enumerate(data.columns):
     print('\n' + c if i % 6 == 0 else c, end=' | ')
 
 print(data.shape)
+data.dropna(subset=['product_name'], inplace=True)
+data = data.fillna(0)
 data.to_csv('../data/df_CatVal_cleanedV2.csv')
 
 df = data[['code', 'product_name', 'quantity_num']]
