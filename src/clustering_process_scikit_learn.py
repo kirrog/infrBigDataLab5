@@ -11,8 +11,6 @@ nltk.download('punkt')
 df = pd.read_csv("../data/df_CatVal_cleanedV2.csv",
                  encoding="utf-8", low_memory=False, index_col=0)
 
-
-
 df_init = df
 
 for i in range(len(df.columns)):

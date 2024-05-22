@@ -9,7 +9,7 @@ from sklearn import preprocessing
 import nltk
 
 nrows = 12000
-file_path = "../data/datas_reste_non_num_a_traiter2.csv"
+file_path = "../data/datas_temperal.csv"
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
                    # nrows=nrows
                    )
@@ -479,19 +479,13 @@ data.drop(columns=['url', 'abbreviated_product_name',
                    'ingredients', 'allergens', 'traces', 'no_nutrition_data', 'additives',
                    'pnns1', 'pnns2', 'food_groups_en', 'brand_owner', 'ecoscore_grade',
                    'owner', 'main_category', 'quantity_type', 'quantity_unit',
-                   'pnns1_hashed'], inplace=True)
+                   'pnns1_hashed', "creator", "created_datetime", "last_modified_datetime",
+                   "last_modified_by", "last_updated_datetime", "product_name", "origins", "food_groups"
+                   ], inplace=True)
 
 for i, c in enumerate(data.columns):
     print('\n' + c if i % 6 == 0 else c, end=' | ')
 
 print(data.shape)
-data.dropna(subset=['product_name'], inplace=True)
 data = data.fillna(0)
 data.to_csv('../data/df_CatVal_cleanedV2.csv')
-
-df = data[['code', 'product_name', 'quantity_num']]
-print(df)
-
-df.to_csv('../data/dfCatVal_code_product_quantity.csv')
-
-print(df.shape)

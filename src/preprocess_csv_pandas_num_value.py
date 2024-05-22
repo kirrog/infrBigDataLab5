@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from nltk.stem import WordNetLemmatizer
 from sklearn.metrics import accuracy_score
 
 pd.options.display.max_seq_items = 3000000
-file_path = "/media/kirrog/data/data/infr_bd/en.openfoodfacts.org.products.csv"
+file_path = "../data/en.openfoodfacts.org.products.csv"
 nrows = 120000
 data = pd.read_csv(file_path, sep="\t", encoding="utf-8", low_memory=False,
                    nrows=nrows
@@ -288,7 +287,6 @@ font_title = {'family': 'serif',
 
 warnings.filterwarnings('ignore')
 
-sns.set_style("whitegrid")
 fig = plt.figure(figsize=(30, 350))
 
 num_features = len(numerical_features)
@@ -474,4 +472,4 @@ datas_cleaned['nutriscore_grade'] = datas_cleaned.apply(
     lambda x: get_nutriscore_grade(x['nutriscore_score']) if pd.isna(x['nutriscore_grade']) else x['nutriscore_grade'],
     axis=1)
 
-datas_cleaned.to_csv("../data/datas_reste_non_num_a_traiter2.csv", sep='\t', encoding='utf-8', index=False)
+datas_cleaned.to_csv("../data/datas_temperal.csv", sep='\t', encoding='utf-8', index=False)
