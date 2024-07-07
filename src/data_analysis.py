@@ -52,4 +52,3 @@ plt.text(sup_threshold + 2, 65, 'Number of nulls to choose', fontsize=16, color=
 plt.title("Number of nulls for each category (%)", fontdict=font_title)
 plt.xlabel("Number of nulls (%)")
 plt.show()
-

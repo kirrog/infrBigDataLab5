@@ -1,5 +1,6 @@
 import json
 
+import numpy
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.ml.feature import StandardScaler
@@ -23,6 +24,9 @@ scalerModel = scaler.fit(final_data)
 cluster_final_data = scalerModel.transform(final_data)
 
 results = dict()
+best_kmeans = None
+best_result = 0.0
+
 # Evaluate clustering by computing Within Set Sum of Squared Errors.
 for k in range(2, 30):
     kmeans = KMeans(featuresCol='scaledFeatures', k=k)
@@ -30,6 +34,11 @@ for k in range(2, 30):
     predictions = model.transform(cluster_final_data)
     evaluator = ClusteringEvaluator()
     silhouette = evaluator.evaluate(predictions)
+
+    if best_result > silhouette:
+        best_result = silhouette
+        best_kmeans = model
+
     results[k] = silhouette
     print("With K={}".format(k))
     print("Silhouette with squared euclidean distance = " + str(silhouette))
@@ -37,3 +46,7 @@ for k in range(2, 30):
 
 with open("metrics/kmeans_metrics.json", "w", encoding="UTF-8") as f:
     json.dump(results, f, ensure_ascii=False)
+
+res = numpy.array(best_kmeans.clusterCenters())
+
+numpy.save("model/kmeans.npy", res)
