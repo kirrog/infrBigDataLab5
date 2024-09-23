@@ -1,52 +1,46 @@
-import json
+import logging
 
-import numpy
-from pyspark.ml.clustering import KMeans
-from pyspark.ml.evaluation import ClusteringEvaluator
-from pyspark.ml.feature import StandardScaler
-from pyspark.ml.feature import VectorAssembler
+from pyspark.ml import clustering, evaluation
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder.appName('customers').getOrCreate()
+from src import configs, preprocess_csv_spark
 
-dataset = spark.read.csv("data/df_CatVal_cleanedV2.csv", header=True, inferSchema=True)
-print(dataset.head(1))
-# dataset.describe().show(1)
-dataset.printSchema()
+logger = logging.Logger("clustering")
 
-vec_assembler = VectorAssembler(inputCols=dataset.columns, outputCol='features')
-final_data = vec_assembler.transform(dataset)
+def run(config: configs.TrainConfig):
+    spark_config = config.spark
+    spark = (
+        SparkSession.builder.appName(spark_config.app_name)
+        .master(spark_config.deploy_mode)
+        .config("spark.driver.cores", spark_config.driver_cores)
+        .config("spark.executor.cores", spark_config.executor_cores)
+        .config("spark.driver.memory", spark_config.driver_memory)
+        .config("spark.executor.memory", spark_config.executor_memory)
+        .getOrCreate()
+    )
 
-scaler = StandardScaler(inputCol="features", outputCol="scaledFeatures", withStd=True, withMean=False)
+    preprocessor = preprocess_csv_spark.Preprocessor(spark, config.data.feature_path)
+    data = preprocessor.load_data(config.data.data_path)
+    df = preprocessor.preprocess(data)
 
-scalerModel = scaler.fit(final_data)
+    kmeans_kwargs = config.kmeans.__dict__
+    logger.info("Using kmeans model with parameters: {}", kmeans_kwargs)
+    logger.info("Training")
+    model = clustering.KMeans(featuresCol=preprocess_csv_spark.FEATURES_COLUMN, **kmeans_kwargs)
+    model_fit = model.fit(df)
 
-cluster_final_data = scalerModel.transform(final_data)
+    logger.info("Evaluation")
+    evaluator = evaluation.ClusteringEvaluator(
+        predictionCol="prediction",
+        featuresCol=preprocess_csv_spark.FEATURES_COLUMN,
+        metricName="silhouette",
+        distanceMeasure="squaredEuclidean",
+    )
+    output = model_fit.transform(df)
+    output.show()
 
-results = dict()
-best_kmeans = None
-best_result = 0.0
+    score = evaluator.evaluate(output)
+    logger.info("Silhouette Score: {}", score)
 
-# Evaluate clustering by computing Within Set Sum of Squared Errors.
-for k in range(2, 30):
-    kmeans = KMeans(featuresCol='scaledFeatures', k=k)
-    model = kmeans.fit(cluster_final_data)
-    predictions = model.transform(cluster_final_data)
-    evaluator = ClusteringEvaluator()
-    silhouette = evaluator.evaluate(predictions)
-
-    if best_result > silhouette:
-        best_result = silhouette
-        best_kmeans = model
-
-    results[k] = silhouette
-    print("With K={}".format(k))
-    print("Silhouette with squared euclidean distance = " + str(silhouette))
-    print('--' * 30)
-
-with open("metrics/kmeans_metrics.json", "w", encoding="UTF-8") as f:
-    json.dump(results, f, ensure_ascii=False)
-
-res = numpy.array(best_kmeans.clusterCenters())
-
-numpy.save("model/kmeans.npy", res)
+    logger.info("Saving to {}", config.save_to)
+    model_fit.write().overwrite().save(config.save_to)
